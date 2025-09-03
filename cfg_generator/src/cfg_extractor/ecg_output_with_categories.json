@@ -1,0 +1,343 @@
+{
+    "SampleHistogram": {
+        "M(C)": [
+            "SampleHistogram.SampleHistogram(double low,double high,double width)",
+            "SampleHistogram.operatorPlusEquals(double value)",
+            "SampleStatistic.operatorPlusEquals(double value)",
+            "SampleHistogram.similarSamples(double d)",
+            "SampleHistogram.printBuckets()",
+            "SampleHistogram.reset()",
+            "SampleStatistic.reset()"
+        ],
+        "F(C)": [
+            "SampleStatistic.maxValue",
+            "SampleStatistic.minValue",
+            "SampleStatistic.n",
+            "SampleStatistic.x",
+            "SampleStatistic.x2",
+            "SampleStatistic.x3",
+            "SampleHistogram.SAMPLE_HISTOGRAM_MAXIMUM",
+            "SampleHistogram.SAMPLE_HISTOGRAM_MINIMUM",
+            "SampleHistogram.bucketCount",
+            "SampleHistogram.bucketLimit",
+            "SampleHistogram.howManyBuckets"
+        ],
+        "Emf": [
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.x2",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.maxValue",
+                "o"
+            ],
+            [
+                "SampleHistogram.SampleHistogram(double low,double high,double width)",
+                "SampleHistogram.bucketLimit",
+                "c"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.maxValue",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.maxValue",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.x",
+                "t"
+            ],
+            [
+                "SampleHistogram.SampleHistogram(double low,double high,double width)",
+                "SampleHistogram.bucketCount",
+                "c"
+            ],
+            [
+                "SampleHistogram.similarSamples(double d)",
+                "SampleHistogram.bucketCount",
+                "o"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.minValue",
+                "o"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.x2",
+                "t"
+            ],
+            [
+                "SampleHistogram.similarSamples(double d)",
+                "SampleHistogram.howManyBuckets",
+                "o"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.minValue",
+                "t"
+            ],
+            [
+                "SampleHistogram.operatorPlusEquals(double value)",
+                "SampleHistogram.bucketLimit",
+                "o"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.n",
+                "t"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.n",
+                "t"
+            ],
+            [
+                "SampleHistogram.SampleHistogram(double low,double high,double width)",
+                "SampleHistogram.howManyBuckets",
+                "c"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.minValue",
+                "t"
+            ],
+            [
+                "SampleHistogram.printBuckets()",
+                "SampleHistogram.bucketLimit",
+                "o"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.x",
+                "t"
+            ],
+            [
+                "SampleHistogram.operatorPlusEquals(double value)",
+                "SampleHistogram.bucketCount",
+                "o"
+            ],
+            [
+                "SampleHistogram.printBuckets()",
+                "SampleHistogram.bucketCount",
+                "o"
+            ],
+            [
+                "SampleHistogram.operatorPlusEquals(double value)",
+                "SampleHistogram.howManyBuckets",
+                "o"
+            ],
+            [
+                "SampleHistogram.printBuckets()",
+                "SampleHistogram.howManyBuckets",
+                "o"
+            ],
+            [
+                "SampleHistogram.operatorPlusEquals(double value)",
+                "SampleStatistic.x3",
+                "t"
+            ],
+            [
+                "SampleHistogram.reset()",
+                "SampleHistogram.bucketCount",
+                "o"
+            ],
+            [
+                "SampleHistogram.similarSamples(double d)",
+                "SampleHistogram.bucketLimit",
+                "o"
+            ],
+            [
+                "SampleHistogram.reset()",
+                "SampleHistogram.howManyBuckets",
+                "o"
+            ]
+        ],
+        "Emm": [
+            [
+                "SampleHistogram.reset()",
+                "SampleStatistic.reset()"
+            ],
+            [
+                "SampleHistogram.operatorPlusEquals(double value)",
+                "SampleStatistic.operatorPlusEquals(double value)"
+            ]
+        ]
+    },
+    "SampleStatistic": {
+        "M(C)": [
+            "SampleStatistic.SampleStatistic()",
+            "SampleStatistic.reset()",
+            "SampleStatistic.operatorPlusEquals(double value)",
+            "SampleStatistic.samples()",
+            "SampleStatistic.mean()",
+            "SampleStatistic.variance()",
+            "SampleStatistic.stdDev()",
+            "SampleStatistic.min()",
+            "SampleStatistic.max()",
+            "SampleStatistic.confidence(int pPercentage)",
+            "SampleStatistic.confidence(double pValue)",
+            "SampleStatistic.defaultErrorHandler(String msg)",
+            "SampleStatistic.setErrorHandler(java.util.function.Consumer<String> newHandler)",
+            "SampleStatistic.error(String msg)",
+            "SampleStatistic.tValue(double p,int df)"
+        ],
+        "F(C)": [
+            "SampleStatistic.maxValue",
+            "SampleStatistic.minValue",
+            "SampleStatistic.n",
+            "SampleStatistic.x",
+            "SampleStatistic.x2",
+            "SampleStatistic.x3"
+        ],
+        "Emf": [
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.x2",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.maxValue",
+                "o"
+            ],
+            [
+                "SampleStatistic.samples()",
+                "SampleStatistic.n",
+                "r"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.maxValue",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.maxValue",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.x",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.minValue",
+                "o"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.x2",
+                "t"
+            ],
+            [
+                "SampleStatistic.variance()",
+                "SampleStatistic.x2",
+                "o"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.minValue",
+                "t"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.n",
+                "t"
+            ],
+            [
+                "SampleStatistic.operatorPlusEquals(double value)",
+                "SampleStatistic.n",
+                "t"
+            ],
+            [
+                "SampleStatistic.max()",
+                "SampleStatistic.maxValue",
+                "r"
+            ],
+            [
+                "SampleStatistic.min()",
+                "SampleStatistic.minValue",
+                "r"
+            ],
+            [
+                "SampleStatistic.variance()",
+                "SampleStatistic.x",
+                "o"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.minValue",
+                "t"
+            ],
+            [
+                "SampleStatistic.reset()",
+                "SampleStatistic.x",
+                "t"
+            ],
+            [
+                "SampleStatistic.variance()",
+                "SampleStatistic.n",
+                "o"
+            ],
+            [
+                "SampleStatistic.mean()",
+                "SampleStatistic.x",
+                "o"
+            ],
+            [
+                "SampleStatistic.confidence(double pValue)",
+                "SampleStatistic.n",
+                "o"
+            ],
+            [
+                "SampleStatistic.mean()",
+                "SampleStatistic.n",
+                "o"
+            ],
+            [
+                "SampleStatistic.stdDev()",
+                "SampleStatistic.n",
+                "o"
+            ],
+            [
+                "SampleStatistic.confidence(int pPercentage)",
+                "SampleStatistic.n",
+                "o"
+            ]
+        ],
+        "Emm": [
+            [
+                "SampleStatistic.confidence(int pPercentage)",
+                "SampleStatistic.stdDev()"
+            ],
+            [
+                "SampleStatistic.stdDev()",
+                "SampleStatistic.variance()"
+            ],
+            [
+                "SampleStatistic.confidence(double pValue)",
+                "SampleStatistic.tValue(double p,int df)"
+            ],
+            [
+                "SampleStatistic.SampleStatistic()",
+                "SampleStatistic.reset()"
+            ],
+            [
+                "SampleStatistic.confidence(int pPercentage)",
+                "SampleStatistic.tValue(double p,int df)"
+            ],
+            [
+                "SampleStatistic.confidence(double pValue)",
+                "SampleStatistic.stdDev()"
+            ]
+        ]
+    }
+}
