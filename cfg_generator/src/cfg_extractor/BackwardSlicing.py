@@ -353,7 +353,7 @@ def main(input_file_path: str, filtered_used_variables_dict: dict):
 
 
 if __name__ == "__main__":
-    input_file_path = "G:\\OpenUnderstand\\cfg_generator\\test\\f.java"
+    input_file_path = "test\\f.java"
 
     filtered_used_variables_dict = main_output(input_file_path)
 

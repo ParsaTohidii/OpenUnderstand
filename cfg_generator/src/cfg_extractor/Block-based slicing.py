@@ -525,7 +525,7 @@ class ProgramSlicer:
 
 
 if __name__ == "__main__":
-    file_path = "G:\\OpenUnderstand\\cfg_generator\\test\\f.java"
+    file_path = "test\\f.java"
     slicer = ProgramSlicer()
     results = slicer.main(file_path)
     print("\nFinal Results Dictionary:")

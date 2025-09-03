@@ -415,7 +415,7 @@ def main(input_file_path, cdg_extractor_visitor):
 
 if __name__ == "__main__":
     # Specify the path to your input Java file
-    input_file_path = "G:\\OpenUnderstand\\cfg_generator\\test\\f.java"
+    input_file_path = "test\\f.java"
 
     visitor = CDGExtractorVisitor()
 

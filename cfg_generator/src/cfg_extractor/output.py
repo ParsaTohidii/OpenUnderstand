@@ -269,5 +269,5 @@ def main(input_file):
 
 
 if __name__ == "__main__":
-    input_file = "G:\\OpenUnderstand\\cfg_generator\\test\\f.java"
+    input_file = "test\\f.java"
     main(input_file)
