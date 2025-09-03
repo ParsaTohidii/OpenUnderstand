@@ -199,29 +199,34 @@ class ProgramSlicer:
             formatted_output_list.append(formatted_output)
         return formatted_output_list
 
-    def convert_dominating_blocks_to_basic_blocks(self, dominating_blocks_by_line_list, line_to_basic_block_list):
-        dominating_blocks_by_basic_block_list = []
-        for dominating_blocks_by_line, line_to_basic_block in zip(dominating_blocks_by_line_list,
-                                                                  line_to_basic_block_list):
-            dominating_blocks_by_basic_block = OrderedDict()
-            # Process lines in sorted order
-            for line in sorted(dominating_blocks_by_line.keys()):
-                dominating_lines = dominating_blocks_by_line[line]
-                basic_block_ids = [block for l, block in line_to_basic_block.items() if l == line]
-                if not basic_block_ids:
-                    print(f"⚠️ Warning: No basic block found for line {line}")
-                    continue
-                dominating_basic_blocks = set()
-                for dominating_line in sorted(dominating_lines):
-                    blocks = [block for l, block in line_to_basic_block.items() if l == dominating_line]
-                    if not blocks:
-                        print(f"⚠️ Warning: No basic block found for dominating line {dominating_line}")
-                    else:
-                        dominating_basic_blocks.update(blocks)
-                for block_id in sorted(basic_block_ids):
-                    dominating_blocks_by_basic_block[block_id] = sorted(dominating_basic_blocks)
-            dominating_blocks_by_basic_block_list.append(dominating_blocks_by_basic_block)
-        return dominating_blocks_by_basic_block_list
+    def convert_dominating_blocks_to_basic_blocks(self, all_dominating_blocks_by_line_list, line_to_basic_block_list):
+        """
+        Converts line-based dominating information to basic block based information.
+        Fixed to handle single integer basic block mappings.
+        """
+        results = []
+
+        for all_dominating_blocks_by_line, line_to_basic_block in zip(
+                all_dominating_blocks_by_line_list, line_to_basic_block_list
+        ):
+            basic_block_dominating = {}
+
+            # For each line, find its basic block and get dominating blocks
+            for line, basic_block_id in line_to_basic_block.items():
+                if basic_block_id not in basic_block_dominating:
+                    basic_block_dominating[basic_block_id] = set()
+
+                if line in all_dominating_blocks_by_line:
+                    dominating_lines = all_dominating_blocks_by_line[line]
+                    # Convert dominating lines to basic blocks
+                    for dominating_line in dominating_lines:
+                        if dominating_line in line_to_basic_block:
+                            dominating_block_id = line_to_basic_block[dominating_line]
+                            basic_block_dominating[basic_block_id].add(dominating_block_id)
+
+            results.append(basic_block_dominating)
+
+        return results
 
     def format_dominating_blocks_output(self, dominating_blocks_by_basic_block_list):
         formatted_output_list = []
@@ -245,118 +250,195 @@ class ProgramSlicer:
             formatted_output_list.append(formatted_output)
         return formatted_output_list
 
-    def calculate_boundary_blocks(self, cfg_list, reachable_blocks_list, dominating_blocks_list):
-        boundary_blocks_list = []
-        for cfg_nodes, reachable_blocks, dominating_blocks in zip(cfg_list, reachable_blocks_list,
-                                                                  dominating_blocks_list):
-            intersection_results = OrderedDict()
-            # Process blocks in sorted order
-            for block_id in sorted(reachable_blocks.keys()):
-                if block_id in dominating_blocks:
-                    intersection_results[block_id] = sorted(
-                        reachable_blocks[block_id] & set(dominating_blocks.get(block_id, set())))
+    def calculate_boundary_blocks(self, cfg_nodes_list, reachable_blocks_list, dominating_blocks_by_basic_block_list):
+        """
+        Calculates boundary blocks for each line based on reachable and dominating blocks.
+        Fixed to properly calculate boundary blocks.
+        """
+        results = []
 
-            line_to_basic_node = OrderedDict()
-            # Process nodes in sorted order
-            sorted_nodes = sorted(cfg_nodes, key=lambda x: x['basic node id'])
-            for node in sorted_nodes:
-                for line in sorted(node['line']):
-                    line_to_basic_node[int(line)] = node['basic node id']
+        for cfg_nodes, reachable_blocks, dominating_blocks_by_basic_block in zip(
+                cfg_nodes_list, reachable_blocks_list, dominating_blocks_by_basic_block_list
+        ):
+            # Create line to basic block mapping
+            line_to_basic_block = {}
+            for node in cfg_nodes:
+                lines = node.get('line', [])
+                block_id = node.get('basic node id')
+                if lines and block_id is not None:
+                    for line in lines:
+                        try:
+                            line_num = int(line)
+                            if line_num not in line_to_basic_block:
+                                line_to_basic_block[line_num] = set()
+                            line_to_basic_block[line_num].add(block_id)
+                        except ValueError:
+                            continue
 
-            line_boundary_blocks = OrderedDict()
-            # Process lines in sorted order
-            for line in sorted(line_to_basic_node.keys()):
-                line_boundary_blocks[line] = []
-                basic_node_id = line_to_basic_node[line]
-                # Process intersection results in sorted order
-                for block_id in sorted(intersection_results.keys()):
-                    if basic_node_id in intersection_results[block_id]:
-                        line_boundary_blocks[line].append(block_id)
+            boundary_blocks = OrderedDict()
 
-            boundary_blocks_list.append(line_boundary_blocks)
-        return boundary_blocks_list
+            # For each line, find boundary blocks
+            for line in sorted(line_to_basic_block.keys()):
+                basic_blocks = line_to_basic_block[line]
+                boundary_set = set()
+
+                for block in basic_blocks:
+                    if block in reachable_blocks and block in dominating_blocks_by_basic_block:
+                        reachable_from_block = set(reachable_blocks[block])
+                        dominating_for_block = set(dominating_blocks_by_basic_block[block])
+
+                        # Boundary blocks are those that are reachable but not dominating
+                        boundary_blocks_for_line = reachable_from_block - dominating_for_block
+                        boundary_set.update(boundary_blocks_for_line)
+
+                if boundary_set:
+                    boundary_blocks[line] = boundary_set
+
+            results.append(boundary_blocks)
+
+        return results
 
     def calculate_reachables_for_boundary_blocks(self, boundary_blocks_list, reachable_blocks_list):
-        line_reachable_blocks_list = []
+        """
+        Calculates reachable blocks for each boundary block at each line.
+        Fixed to handle empty boundary blocks properly.
+        """
+        results = []
+
         for boundary_blocks, reachable_blocks in zip(boundary_blocks_list, reachable_blocks_list):
-            line_reachable_blocks = OrderedDict()
-            # Process lines in sorted order
-            for line in sorted(boundary_blocks.keys()):
-                boundary_blocks_list_for_line = boundary_blocks[line]
-                line_reachable_blocks[line] = OrderedDict()
-                # Process boundary blocks in sorted order
-                for block in sorted(boundary_blocks_list_for_line):
-                    line_reachable_blocks[line][block] = sorted(reachable_blocks.get(block, set()))
-            line_reachable_blocks_list.append(line_reachable_blocks)
-        return line_reachable_blocks_list
+            line_to_reachables = OrderedDict()
 
-    def get_lines_for_reachable_blocks(self, cfg_list, reachable_blocks_for_boundary_list):
-        lines_for_reachable_blocks_list = []
-        for cfg_nodes, reachable_blocks_for_boundary in zip(cfg_list, reachable_blocks_for_boundary_list):
-            block_to_lines = OrderedDict()
-            # Process nodes in sorted order
-            sorted_nodes = sorted(cfg_nodes, key=lambda x: x['basic node id'])
-            for node in sorted_nodes:
-                block_to_lines[node['basic node id']] = set(map(int, sorted(node['line'])))
+            for line, boundary_blocks_set in boundary_blocks.items():
+                reachables_for_line = OrderedDict()
 
-            lines_for_reachable_blocks = OrderedDict()
-            # Process lines in sorted order
+                for boundary_block in boundary_blocks_set:
+                    if boundary_block in reachable_blocks:
+                        reachables_for_line[boundary_block] = reachable_blocks[boundary_block]
+
+                if reachables_for_line:
+                    line_to_reachables[line] = reachables_for_line
+
+            results.append(line_to_reachables)
+
+        return results
+
+    def get_lines_for_reachable_blocks(self, cfg_nodes_list, reachable_blocks_for_boundary_list):
+        """
+        Maps each line to the reachable blocks and their corresponding code lines.
+        Fixed to properly populate the data structure.
+        """
+        results = []
+
+        for cfg_nodes, reachable_blocks_for_boundary in zip(cfg_nodes_list, reachable_blocks_for_boundary_list):
+            line_to_blocks = OrderedDict()
+
+            # Create a mapping from basic block IDs to their line ranges
+            block_to_lines = {}
+            for node in cfg_nodes:
+                block_id = node.get('basic node id')
+                if block_id is not None:
+                    lines = node.get('line', [])
+                    if lines:
+                        # Convert string line numbers to integers
+                        try:
+                            block_to_lines[block_id] = [int(line) for line in lines if line.strip()]
+                        except ValueError:
+                            print(f"Warning: Could not convert lines {lines} to integers for block {block_id}")
+                            continue
+
+            # For each line, find which blocks can reach it and get their lines
             for line in sorted(reachable_blocks_for_boundary.keys()):
-                lines_for_reachable_blocks[line] = OrderedDict()
-                reachable_blocks = reachable_blocks_for_boundary[line]
-                # Process blocks in sorted order
-                for block in sorted(reachable_blocks.keys()):
-                    reachable_block_ids = reachable_blocks[block]
-                    lines_set = set()
-                    for block_id in sorted(reachable_block_ids):
-                        lines_set.update(block_to_lines.get(block_id, []))
-                    lines_for_reachable_blocks[line][block] = sorted(lines_set)
-            lines_for_reachable_blocks_list.append(lines_for_reachable_blocks)
-        return lines_for_reachable_blocks_list
+                reachable_blocks_dict = reachable_blocks_for_boundary[line]
+                blocks_to_lines = OrderedDict()
+
+                for block_id, reachable_blocks in reachable_blocks_dict.items():
+                    # Get all lines from the reachable blocks
+                    all_lines = set()
+                    for reachable_block in reachable_blocks:
+                        if reachable_block in block_to_lines:
+                            all_lines.update(block_to_lines[reachable_block])
+
+                    if all_lines:
+                        blocks_to_lines[block_id] = sorted(all_lines)
+
+                if blocks_to_lines:
+                    line_to_blocks[line] = blocks_to_lines
+
+            results.append(line_to_blocks)
+
+        return results
 
     def compute_common_slicing(self, dict_1, dict_2):
         """
         Calculates the intersection between slicing lines and block lines for all variables.
+        Fixed to handle different key types and empty data structures.
         """
-        # Flatten dict_2 with deterministic ordering
-        dict_2_flat = OrderedDict()
-        # Sort the list of dictionaries by their string representation for deterministic order
-        for item in sorted(dict_2, key=lambda x: str(sorted(x.items()))):
-            # Sort each dictionary's items for deterministic update
-            sorted_item = OrderedDict(sorted(item.items()))
-            dict_2_flat.update(sorted_item)
-
         result = OrderedDict()
 
-        # Iterate in sorted key order for determinism
-        for key in sorted(dict_1.keys()):
-            if key not in dict_2_flat:
+        # Handle case where dict_1 is empty
+        if not dict_1:
+            print("⚠️ Warning: dict_1 (slicing_data) is empty")
+            return result
+
+        # Handle case where dict_2 is empty
+        if not dict_2:
+            print("⚠️ Warning: dict_2 (lines_for_reachable_blocks) is empty")
+            return result
+
+        # Convert both dictionaries to use the same key type (int)
+        dict_1_int_keys = {}
+        dict_2_int_keys = {}
+
+        # Convert dict_1 keys to integers
+        for key in dict_1.keys():
+            try:
+                int_key = int(key)
+                dict_1_int_keys[int_key] = dict_1[key]
+            except (ValueError, TypeError):
+                print(f"⚠️ Warning: Could not convert key '{key}' to int in dict_1")
+                continue
+
+        # Convert dict_2 keys to integers
+        for key in dict_2.keys():
+            try:
+                int_key = int(key)
+                dict_2_int_keys[int_key] = dict_2[key]
+            except (ValueError, TypeError):
+                print(f"⚠️ Warning: Could not convert key '{key}' to int in dict_2")
+                continue
+
+        # Process dict_1 in sorted key order for determinism
+        for key in sorted(dict_1_int_keys.keys()):
+            if key not in dict_2_int_keys:
+                print(f"⚠️ Warning: Key {key} not found in dict_2")
                 continue
 
             slicing_aggregate = set()
             duplicate_aggregate = set()
 
-            # Deterministic aggregation: iterate over variables in sorted order
-            for var_name in sorted(dict_1[key].keys()):
-                var_data = dict_1[key][var_name]
+            # Process variables in sorted order
+            for var_name in sorted(dict_1_int_keys[key].keys()):
+                var_data = dict_1_int_keys[key][var_name]
 
+                # Handle main_slicing - flatten nested structures
                 main_slicing = var_data.get("main_slicing", [])
                 if main_slicing:
-                    # Handle list of lists vs flat list
                     if any(isinstance(x, (list, tuple, set)) for x in main_slicing):
                         for seq in main_slicing:
                             slicing_aggregate.update(seq)
                     else:
                         slicing_aggregate.update(main_slicing)
 
+                # Handle duplicate_lines
                 duplicate_aggregate.update(var_data.get("duplicate_lines", []))
 
             if not slicing_aggregate and not duplicate_aggregate:
+                print(f"⚠️ Warning: No slicing data for key {key}")
                 continue
 
             matched_blocks = []
-            # Sort blocks to avoid PYTHONHASHSEED influence
-            for block, lines in sorted(dict_2_flat[key].items()):
+            # Process dict_2[key] in sorted block order
+            for block, lines in sorted(dict_2_int_keys[key].items()):
                 lines_set = set(lines)
                 common_slicing = slicing_aggregate & lines_set
                 common_duplicates = duplicate_aggregate & lines_set
@@ -368,10 +450,14 @@ class ProgramSlicer:
                             "duplicate_lines": sorted(common_duplicates)
                         }
                     })
+                else:
+                    print(f"⚠️ Warning: No common lines found for block {block} at key {key}")
 
             # Sort matched_blocks by block label for stability
             if matched_blocks:
                 result[key] = sorted(matched_blocks, key=lambda x: list(x.keys())[0])
+            else:
+                print(f"⚠️ Warning: No matched blocks found for key {key}")
 
         return result
 
@@ -492,7 +578,29 @@ class ProgramSlicer:
 
             filtered_used_variables_dict = output_main(file_path)
             slicing_data = back_main(file_path, filtered_used_variables_dict)
-            output = self.compute_common_slicing(slicing_data, lines_for_reachable_blocks_list)
+
+            # DEBUG: Print the structure of slicing_data
+            print("\n🔍 DEBUG: slicing_data structure:")
+            print(f"Type: {type(slicing_data)}")
+            print(f"Keys: {list(slicing_data.keys()) if hasattr(slicing_data, 'keys') else 'N/A'}")
+            if slicing_data:
+                for key, value in slicing_data.items():
+                    print(f"Key {key}: {type(value)} -> {value}")
+
+            # DEBUG: Print the structure of lines_for_reachable_blocks_list
+            print("\n🔍 DEBUG: lines_for_reachable_blocks_list structure:")
+            print(f"Type: {type(lines_for_reachable_blocks_list)}")
+            print(f"Length: {len(lines_for_reachable_blocks_list)}")
+            if lines_for_reachable_blocks_list:
+                for i, item in enumerate(lines_for_reachable_blocks_list):
+                    print(f"Item {i}: {type(item)}")
+                    if hasattr(item, 'keys'):
+                        print(f"  Keys: {list(item.keys())}")
+                        for key, value in item.items():
+                            print(f"  Key {key}: {type(value)} -> {value}")
+
+            output = self.compute_common_slicing(slicing_data, lines_for_reachable_blocks_list[
+                0] if lines_for_reachable_blocks_list else {})
 
             print("Tracking Block Lines:")
             blocks = self.track_blocks_in_file(file_path)
