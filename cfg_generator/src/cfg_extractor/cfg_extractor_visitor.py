@@ -4,7 +4,6 @@ from cfg_generator.src.antlr.gen.JavaParserVisitor import JavaParserVisitor
 from cfg_generator.src.data_structures.graph.networkx_builder import NxDiGraphBuilder as DiGraphBuilder
 from cfg_generator.src.cfg_extractor.language_structure.digraph_embedder import DiGraphEmbedder
 
-
 class CFGExtractorVisitor(JavaParserVisitor):
     """
     The class includes a method for each non-terminal (i.e., selection, iteration, jump and try-catch statements)
@@ -24,11 +23,62 @@ class CFGExtractorVisitor(JavaParserVisitor):
         self.catches = []
 
     def visitMethodDeclaration(self, ctx: JavaParser.MethodDeclarationContext):
+        """
+        Visits a method declaration and extracts its information into the PDG.
+        """
         gin = self.visit(ctx.methodBody())
-        name = self.visit(ctx.methodHeader())
+        name = self.get_method_signature(ctx)
+        print("\t\t" + name)
+
         graph, self.functionLastNode[name] = DiGraphEmbedder.embed_in_function(gin, self.catches)
+
         self.functions[name] = graph.build()
         self.catches = []
+
+    def get_method_signature(self, ctx: JavaParser.MethodDeclarationContext) -> str:
+        """
+        Extracts the method signature including method name and parameter types/names, excluding return type.
+        Compatible with simplified grammar (no lastFormalParameter).
+        """
+        # Get the method name
+        method_name = ctx.methodHeader().methodDeclarator().Identifier().getText()
+
+        # Get the parameter list
+        parameters = []
+        arg_index = 0
+        formal_parameter_list = ctx.methodHeader().methodDeclarator().formalParameterList()
+
+        def _safe_param(param):
+            nonlocal arg_index
+            param_type = param.unannType().getText() if param.unannType() else "unknown"
+            is_varargs = "..." in param.getText()
+            if is_varargs:
+                param_type = param_type + "..."
+            if param.variableDeclaratorId() and param.variableDeclaratorId().Identifier():
+                param_name = param.variableDeclaratorId().Identifier().getText()
+            else:
+                arg_index += 1
+                param_name = f"arg{arg_index}"
+            parameters.append(f"{param_type} {param_name}")
+
+        if formal_parameter_list:
+            for param in formal_parameter_list.formalParameter():
+                _safe_param(param)
+
+        # Construct the method signature
+        return f"{method_name}({', '.join(parameters)})"
+
+    def get_type_from_context(self, ctx) -> str:
+        """
+        Extracts the type from the context node.
+        Handles cases where ctx might be None.
+        """
+        if ctx is None:
+            return "UnknownType"
+        try:
+            return ctx.getText()
+        except Exception:
+            return "UnknownType"
 
     def visitMethodHeader(self, ctx: JavaParser.MethodHeaderContext):
         return self.visit(ctx.methodDeclarator())
@@ -96,12 +146,15 @@ class CFGExtractorVisitor(JavaParserVisitor):
         return embeded_graph
 
     def visitCatches(self, ctx: JavaParser.CatchesContext):
-        return [self.visit(catches) for catches in ctx.catchClause()]
+        return [self.visit(catches) for catches in ctx.catchClause() if catches]
 
     def visitCatchClause(self, ctx: JavaParser.CatchClauseContext):
         catch_body = self.visit(ctx.block())
-        exception = ctx.catchFormalParameter()
+        exception = ctx.catchFormalParameter().catchType().getText()
         return exception, catch_body
+
+    # def visitFinallyBlock(self, ctx: JavaParser.FinallyBlockContext):
+    #     return self.visit(ctx.block())
 
     def visitExpressionStatement(self, ctx: JavaParser.ExpressionStatementContext):
         return DiGraphBuilder().add_node(value=[ctx])

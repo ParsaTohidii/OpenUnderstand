@@ -52,12 +52,14 @@ class NxDiGraphBuilder(IDiGraphBuilder):
         return nx.descendants(self.__graph, node)
 
     def add_node(self, node=0, value=None):
-        self.__graph.add_node(node, value=value)
+        self.__graph.add_node(node, value=value, node_color="#FFFFFF")
         return self
 
     def successors(self, node: int):
         for successor in self.__graph.successors(node):
             yield successor
+    def has_edge(self, u: int, b: int) -> bool:
+        return self.__graph.has_edge(u, b)
 
     def get_last_nodes(self):
         last_nodes = []

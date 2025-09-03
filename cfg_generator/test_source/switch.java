@@ -16,6 +16,7 @@ else
 break;
 case 2:
 System.out.println("Today is Monday");
+break;
 case 7:
 System.out.println("Today is Sunday");
 break;

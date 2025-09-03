@@ -1,6 +1,6 @@
 from antlr4 import CommonTokenStream, ParserRuleContext
 
-from antlr.gen.JavaLexer import JavaLexer
+from cfg_generator.src.antlr.gen.JavaLexer import JavaLexer
 
 
 def extract_exact_text(token_stream: CommonTokenStream, rule: ParserRuleContext) -> str:
@@ -8,16 +8,20 @@ def extract_exact_text(token_stream: CommonTokenStream, rule: ParserRuleContext)
 
 
 def is_break(rule: ParserRuleContext) -> bool:
-    return rule.start.type == JavaLexer.BREAK
+    if not hasattr(rule, 'symbol'):
+        return rule.start.type == JavaLexer.BREAK
 
 
 def is_return(rule: ParserRuleContext) -> bool:
-    return rule.start.type == JavaLexer.RETURN
+    if not hasattr(rule, 'symbol'):
+        return rule.start.type == JavaLexer.RETURN
 
 
 def is_continue(rule: ParserRuleContext) -> bool:
-    return rule.start.type == JavaLexer.CONTINUE
+    if not hasattr(rule, 'symbol'):
+        return rule.start.type == JavaLexer.CONTINUE
 
 
 def is_throw(rule: ParserRuleContext) -> bool:
-    return rule.start.type == JavaLexer.THROW
+    if not hasattr(rule, 'symbol'):
+        return rule.start.type == JavaLexer.THROW

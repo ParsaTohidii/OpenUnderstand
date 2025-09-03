@@ -56,6 +56,10 @@ class IDiGraphBuilder(metaclass=abc.ABCMeta):
         """successors of a given node"""
 
     @abc.abstractmethod
+    def has_edge(self, u: int, b: int) -> bool:
+        """ Check if edge exists """
+
+    @abc.abstractmethod
     def predecessors(self, node: int) -> Iterable:
         """predecessors of a given node"""
 

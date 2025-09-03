@@ -19,3 +19,18 @@ class a{
         c++;
     }
 }
+
+
+// public class TryCatchExample {
+//     public static void main(String[] args) {
+//         int[] numbers = {10, 20, 30};
+//
+//         try {
+//             System.out.println("Trying to access index 5: " + numbers[5]);
+//         } catch (ArrayIndexOutOfBoundsException e) {
+//             System.out.println("Error: Index out of bounds. Please check the index.");
+//         } catch (Exception e) {
+//             System.out.println("An unexpected error occurred: " + e.getMessage());
+//         }
+//     }
+// }

@@ -1,6 +1,6 @@
-# Generated from F:/cfg-generator/grammar/JavaParser.g4 by ANTLR 4.13.1
+# Generated from G:/OpenUnderstand/cfg_generator/grammar/JavaParser.g4 by ANTLR 4.8
 from antlr4 import *
-if "." in __name__:
+if __name__ is not None and "." in __name__:
     from .JavaParser import JavaParser
 else:
     from JavaParser import JavaParser

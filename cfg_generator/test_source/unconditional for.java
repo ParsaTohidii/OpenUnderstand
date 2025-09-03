@@ -9,6 +9,6 @@ class a{
             if (condition) break;
             System.out.println(i);
       }
-//       c++;
+
   }
 }

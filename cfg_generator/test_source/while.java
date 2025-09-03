@@ -5,6 +5,6 @@ class a{
             System.out.println(i);
             i++;
         }
-        c++;
+
     }
 }
