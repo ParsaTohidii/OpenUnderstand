@@ -101,19 +101,28 @@ class ProgramSlicer:
             sorted_cdg = sorted(cdg, key=lambda x: x['node id'])
 
             def calculate_dominating_blocks_by_line(line_number):
-                # Use sorted iteration for deterministic behavior
-                target_block = next((block for block in sorted_cdg if line_number in block.get('line', [])), None)
-                if not target_block:
+                # Find ALL blocks that contain this line, not just the first one
+                target_blocks = [block for block in sorted_cdg if line_number in block.get('line', [])]
+                if not target_blocks:
+                    print(f"⚠️ Warning: No CDG block found for line {line_number}")
                     return []
+
+                # For deterministic results, always use the first block when multiple contain the same line
+                target_block = target_blocks[0]
 
                 previous_nodes = target_block.get('previous node', [])
                 if not previous_nodes:
-                    return []
+                    # This is likely the entry block or a block with no dependencies
+                    return [target_block]
 
                 # Sort previous nodes for deterministic processing
                 sorted_prev_nodes = sorted(previous_nodes, key=lambda x: x['id'])
                 prev_node_id = sorted_prev_nodes[0]['id']
                 prev_node = next((block for block in sorted_cdg if block['node id'] == prev_node_id), None)
+
+                if not prev_node:
+                    print(f"⚠️ Warning: Previous node {prev_node_id} not found for line {line_number}")
+                    return [target_block]
 
                 if len(prev_node['next node']) == 1 and prev_node['next node'][0]['id'] == target_block['node id']:
                     return [target_block]
@@ -141,12 +150,19 @@ class ProgramSlicer:
                 return [block for block in sorted_cdg if block['node id'] in visited_blocks]
 
             all_doms = OrderedDict()
-            # Process blocks in sorted order
+            # Get all unique lines from all blocks
+            all_lines = set()
             for block in sorted_cdg:
-                for line in sorted(block.get('line', [])):
-                    dominating_blocks = calculate_dominating_blocks_by_line(line)
+                all_lines.update(block.get('line', []))
+
+            # Process lines in sorted order
+            for line in sorted(all_lines):
+                dominating_blocks = calculate_dominating_blocks_by_line(line)
+                if dominating_blocks:
                     # Sort dominating lines for deterministic output
-                    all_doms[line] = sorted(set(line for block in dominating_blocks for line in block.get('line', [])))
+                    dominating_lines = sorted(
+                        set(line for block in dominating_blocks for line in block.get('line', [])))
+                    all_doms[line] = dominating_lines
 
             all_doms_list.append(all_doms)
             print("dommm", all_doms)
@@ -371,7 +387,7 @@ class ProgramSlicer:
     def compute_common_slicing(self, dict_1, dict_2):
         """
         Calculates the intersection between slicing lines and block lines for all variables.
-        Fixed to handle different key types and empty data structures.
+        Fixed to handle cases where slicing line numbers don't exactly match boundary block line numbers.
         """
         result = OrderedDict()
 
@@ -407,18 +423,28 @@ class ProgramSlicer:
                 print(f"⚠️ Warning: Could not convert key '{key}' to int in dict_2")
                 continue
 
+        # Get all available boundary block lines for matching
+        available_boundary_lines = sorted(dict_2_int_keys.keys())
+
         # Process dict_1 in sorted key order for determinism
-        for key in sorted(dict_1_int_keys.keys()):
-            if key not in dict_2_int_keys:
-                print(f"⚠️ Warning: Key {key} not found in dict_2")
+        for slicing_line in sorted(dict_1_int_keys.keys()):
+            # Find the closest boundary block line to this slicing line
+            closest_boundary_line = None
+            if available_boundary_lines:
+                # Find the boundary line that's closest to the slicing line
+                closest_boundary_line = min(available_boundary_lines, key=lambda x: abs(x - slicing_line))
+                print(f"🔍 Matching slicing line {slicing_line} with closest boundary line {closest_boundary_line}")
+
+            if closest_boundary_line is None or closest_boundary_line not in dict_2_int_keys:
+                print(f"⚠️ Warning: No boundary line found for slicing line {slicing_line}")
                 continue
 
             slicing_aggregate = set()
             duplicate_aggregate = set()
 
             # Process variables in sorted order
-            for var_name in sorted(dict_1_int_keys[key].keys()):
-                var_data = dict_1_int_keys[key][var_name]
+            for var_name in sorted(dict_1_int_keys[slicing_line].keys()):
+                var_data = dict_1_int_keys[slicing_line][var_name]
 
                 # Handle main_slicing - flatten nested structures
                 main_slicing = var_data.get("main_slicing", [])
@@ -433,12 +459,12 @@ class ProgramSlicer:
                 duplicate_aggregate.update(var_data.get("duplicate_lines", []))
 
             if not slicing_aggregate and not duplicate_aggregate:
-                print(f"⚠️ Warning: No slicing data for key {key}")
+                print(f"⚠️ Warning: No slicing data for line {slicing_line}")
                 continue
 
             matched_blocks = []
-            # Process dict_2[key] in sorted block order
-            for block, lines in sorted(dict_2_int_keys[key].items()):
+            # Process dict_2[closest_boundary_line] in sorted block order
+            for block, lines in sorted(dict_2_int_keys[closest_boundary_line].items()):
                 lines_set = set(lines)
                 common_slicing = slicing_aggregate & lines_set
                 common_duplicates = duplicate_aggregate & lines_set
@@ -451,13 +477,14 @@ class ProgramSlicer:
                         }
                     })
                 else:
-                    print(f"⚠️ Warning: No common lines found for block {block} at key {key}")
+                    print(
+                        f"⚠️ Warning: No common lines found for block {block} at line {slicing_line} -> {closest_boundary_line}")
 
             # Sort matched_blocks by block label for stability
             if matched_blocks:
-                result[key] = sorted(matched_blocks, key=lambda x: list(x.keys())[0])
+                result[slicing_line] = sorted(matched_blocks, key=lambda x: list(x.keys())[0])
             else:
-                print(f"⚠️ Warning: No matched blocks found for key {key}")
+                print(f"⚠️ Warning: No matched blocks found for line {slicing_line} -> {closest_boundary_line}")
 
         return result
 
